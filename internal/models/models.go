@@ -4,138 +4,223 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
-type UserRole string
+// Base model with common fields
+type Base struct {
+	ID        uuid.UUID      `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	CreatedAt time.Time      `gorm:"not null"`
+	UpdatedAt time.Time      `gorm:"not null"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+// JSONB type for metadata
+type JSONB datatypes.JSON
+
+// Ticket represents a maintenance or repair request
+type Ticket struct {
+	Base
+	Title       string       `gorm:"not null"`
+	Description string       `gorm:"not null"`
+	Status      TicketStatus `gorm:"type:ticket_status;not null"`
+	Priority    TicketPriority `gorm:"type:ticket_priority;not null"`
+	AssignedToID *uuid.UUID `gorm:"type:uuid"`
+	CreatedByID uuid.UUID   `gorm:"type:uuid;not null"`
+	AssetID     *uuid.UUID  `gorm:"type:uuid"`
+	ResolvedAt  *time.Time
+
+	// Relations
+	AssignedTo *User
+	CreatedBy  User
+	Asset      *Asset
+	Comments   []Comment
+}
+
+// Asset represents a physical item that needs maintenance
+type Asset struct {
+	Base
+	Name               string      `gorm:"not null"`
+	Type              AssetType   `gorm:"type:asset_type;not null"`
+	Status            AssetStatus `gorm:"type:asset_status;not null"`
+	Location          string      `gorm:"not null"`
+	QRCode            string      `gorm:"not null;unique"`
+	PurchaseDate      time.Time   `gorm:"not null"`
+	LastMaintenanceDate *time.Time
+	NextMaintenanceDate *time.Time
+	Metadata          JSONB
+
+	// Relations
+	MaintenanceHistory []MaintenanceRecord
+	Tickets           []Ticket
+}
+
+// User represents a system user
+type User struct {
+	Base
+	Email string     `gorm:"not null;unique"`
+	Name  string     `gorm:"not null"`
+	Role  UserRole   `gorm:"type:user_role;not null"`
+
+	// Relations
+	AssignedTickets []Ticket
+	CreatedTickets  []Ticket
+}
+
+// MaintenanceSchedule represents a planned maintenance activity
+type MaintenanceSchedule struct {
+	Base
+	AssetID      uuid.UUID            `gorm:"type:uuid;not null"`
+	Frequency    MaintenanceFrequency `gorm:"type:maintenance_frequency;not null"`
+	LastPerformed *time.Time
+	NextDue      time.Time           `gorm:"not null"`
+	AssignedToID uuid.UUID           `gorm:"type:uuid;not null"`
+	Status       MaintenanceStatus   `gorm:"type:maintenance_status;not null"`
+	Notes        string
+
+	// Relations
+	Asset      Asset
+	AssignedTo User
+}
+
+// MaintenanceRecord represents a completed maintenance activity
+type MaintenanceRecord struct {
+	Base
+	AssetID       uuid.UUID          `gorm:"type:uuid;not null"`
+	PerformedByID uuid.UUID          `gorm:"type:uuid;not null"`
+	PerformedAt   time.Time          `gorm:"not null"`
+	Type          MaintenanceType    `gorm:"type:maintenance_type;not null"`
+	Notes         string
+
+	// Relations
+	Asset       Asset
+	PerformedBy User
+	PartsUsed   []PartUsage
+}
+
+// PartUsage represents parts used in a maintenance record
+type PartUsage struct {
+	Base
+	PartID              uuid.UUID `gorm:"type:uuid;not null"`
+	MaintenanceRecordID uuid.UUID `gorm:"type:uuid;not null"`
+	Quantity            int       `gorm:"not null"`
+
+	// Relations
+	Part               Part
+	MaintenanceRecord  MaintenanceRecord
+}
+
+// Part represents an inventory item
+type Part struct {
+	Base
+	Name           string    `gorm:"not null"`
+	Description    string    `gorm:"not null"`
+	Quantity       int       `gorm:"not null"`
+	MinimumQuantity int      `gorm:"not null"`
+	Location       string    `gorm:"not null"`
+	LastRestocked  time.Time `gorm:"not null"`
+}
+
+// Comment represents a comment on a ticket
+type Comment struct {
+	Base
+	TicketID uuid.UUID `gorm:"type:uuid;not null"`
+	UserID   uuid.UUID `gorm:"type:uuid;not null"`
+	Content  string    `gorm:"not null"`
+
+	// Relations
+	Ticket Ticket
+	User   User
+}
+
+// Enums
 type TicketStatus string
 type TicketPriority string
+type AssetType string
+type AssetStatus string
+type UserRole string
+type MaintenanceFrequency string
+type MaintenanceStatus string
+type MaintenanceType string
 
 const (
-	RoleAdmin      UserRole = "admin"
-	RoleManager    UserRole = "manager"
-	RoleTechnician UserRole = "technician"
-	RoleUser       UserRole = "user"
+	// TicketStatus
+	TicketStatusOpen        TicketStatus = "OPEN"
+	TicketStatusInProgress  TicketStatus = "IN_PROGRESS"
+	TicketStatusResolved    TicketStatus = "RESOLVED"
+	TicketStatusClosed      TicketStatus = "CLOSED"
+	TicketStatusCancelled   TicketStatus = "CANCELLED"
 
-	StatusNew       TicketStatus = "new"
-	StatusInProgress TicketStatus = "in_progress"
-	StatusResolved  TicketStatus = "resolved"
-	StatusClosed    TicketStatus = "closed"
+	// TicketPriority
+	TicketPriorityLow      TicketPriority = "LOW"
+	TicketPriorityMedium   TicketPriority = "MEDIUM"
+	TicketPriorityHigh     TicketPriority = "HIGH"
+	TicketPriorityCritical TicketPriority = "CRITICAL"
 
-	PriorityLow    TicketPriority = "low"
-	PriorityMedium TicketPriority = "medium"
-	PriorityHigh   TicketPriority = "high"
+	// AssetType
+	AssetTypeEquipment  AssetType = "EQUIPMENT"
+	AssetTypeFurniture  AssetType = "FURNITURE"
+	AssetTypeElectronics AssetType = "ELECTRONICS"
+	AssetTypePlumbing   AssetType = "PLUMBING"
+	AssetTypeHVAC       AssetType = "HVAC"
+	AssetTypeOther      AssetType = "OTHER"
+
+	// AssetStatus
+	AssetStatusOperational      AssetStatus = "OPERATIONAL"
+	AssetStatusMaintenanceNeeded AssetStatus = "MAINTENANCE_NEEDED"
+	AssetStatusOutOfService     AssetStatus = "OUT_OF_SERVICE"
+	AssetStatusDecommissioned   AssetStatus = "DECOMMISSIONED"
+
+	// UserRole
+	UserRoleAdmin      UserRole = "ADMIN"
+	UserRoleManager    UserRole = "MANAGER"
+	UserRoleTechnician UserRole = "TECHNICIAN"
+	UserRoleStaff      UserRole = "STAFF"
+
+	// MaintenanceFrequency
+	MaintenanceFrequencyDaily      MaintenanceFrequency = "DAILY"
+	MaintenanceFrequencyWeekly     MaintenanceFrequency = "WEEKLY"
+	MaintenanceFrequencyMonthly    MaintenanceFrequency = "MONTHLY"
+	MaintenanceFrequencyQuarterly  MaintenanceFrequency = "QUARTERLY"
+	MaintenanceFrequencyBiannual   MaintenanceFrequency = "BIANNUAL"
+	MaintenanceFrequencyAnnual     MaintenanceFrequency = "ANNUAL"
+
+	// MaintenanceStatus
+	MaintenanceStatusScheduled MaintenanceStatus = "SCHEDULED"
+	MaintenanceStatusInProgress MaintenanceStatus = "IN_PROGRESS"
+	MaintenanceStatusCompleted  MaintenanceStatus = "COMPLETED"
+	MaintenanceStatusCancelled  MaintenanceStatus = "CANCELLED"
+	MaintenanceStatusOverdue    MaintenanceStatus = "OVERDUE"
+
+	// MaintenanceType
+	MaintenanceTypePreventive     MaintenanceType = "PREVENTIVE"
+	MaintenanceTypeCorrective     MaintenanceType = "CORRECTIVE"
+	MaintenanceTypePredictive     MaintenanceType = "PREDICTIVE"
+	MaintenanceTypeConditionBased MaintenanceType = "CONDITION_BASED"
 )
 
-type Branch struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Name      string    `gorm:"not null"`
-	Address   string
-	CreatedAt time.Time `gorm:"not null;default:now()"`
-	Users     []User
-	Assets    []Asset
-}
-
-type User struct {
-	ID           uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	FullName     string    `gorm:"not null"`
-	Email        string    `gorm:"not null;unique"`
-	PasswordHash string    `gorm:"not null"`
-	Role         UserRole  `gorm:"not null"`
-	BranchID     *uuid.UUID
-	Branch       *Branch
-	IsActive     bool      `gorm:"not null;default:true"`
-	CreatedAt    time.Time `gorm:"not null;default:now()"`
-}
-
-type AssetCategory struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Name      string    `gorm:"not null;unique"`
-	Assets    []Asset
-}
-
-type Asset struct {
-	ID            uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Name          string    `gorm:"not null"`
-	QRCodeID      string    `gorm:"not null;unique"`
-	BranchID      uuid.UUID `gorm:"not null"`
-	Branch        Branch
-	CategoryID    *uuid.UUID
-	Category      *AssetCategory
-	ModelNumber   string
-	PurchaseDate  *time.Time
-	WarrantyUntil *time.Time
-	Metadata      JSONB
-	CreatedAt     time.Time `gorm:"not null;default:now()"`
-	Tickets       []Ticket
-}
-
-type Ticket struct {
-	ID          uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	Title       string    `gorm:"not null"`
-	Description string
-	Status      TicketStatus  `gorm:"not null;default:'new'"`
-	Priority    TicketPriority `gorm:"not null;default:'medium'"`
-	AssetID     uuid.UUID `gorm:"not null"`
-	Asset       Asset
-	CreatedByID uuid.UUID `gorm:"not null"`
-	CreatedBy   User
+// Filter types for repositories
+type TicketFilter struct {
+	Status       *TicketStatus
+	Priority     *TicketPriority
 	AssignedToID *uuid.UUID
-	AssignedTo   *User
-	CreatedAt   time.Time `gorm:"not null;default:now()"`
-	ResolvedAt  *time.Time
-	ClosedAt    *time.Time
-	Updates     []TicketUpdate
-	PartsUsed   []TicketPartsUsage
+	CreatedByID  *uuid.UUID
+	AssetID      *uuid.UUID
 }
 
-type TicketUpdate struct {
-	ID         uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	TicketID   uuid.UUID `gorm:"not null"`
-	Ticket     Ticket
-	UserID     uuid.UUID `gorm:"not null"`
-	User       User
-	Comment    string
-	OldStatus  *TicketStatus
-	NewStatus  *TicketStatus
-	PhotoURL   string
-	CreatedAt  time.Time `gorm:"not null;default:now()"`
+type AssetFilter struct {
+	Type     *AssetType
+	Status   *AssetStatus
+	Location *string
 }
 
-type PreventiveMaintenanceSchedule struct {
-	ID              uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	AssetCategoryID uuid.UUID `gorm:"not null"`
-	Category        AssetCategory
-	TaskDescription string    `gorm:"not null"`
-	FrequencyDays   int       `gorm:"not null"`
-	CreatedAt       time.Time `gorm:"not null;default:now()"`
+type UserFilter struct {
+	Role *UserRole
 }
 
-type InventoryPart struct {
-	ID            uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	PartName      string    `gorm:"not null"`
-	PartNumber    string    `gorm:"unique"`
-	QuantityOnHand int       `gorm:"not null;default:0"`
-	ReorderLevel  int       `gorm:"not null;default:5"`
-	TicketsUsed   []TicketPartsUsage
-}
-
-type TicketPartsUsage struct {
-	TicketID    uuid.UUID `gorm:"primaryKey"`
-	Ticket      Ticket
-	PartID      uuid.UUID `gorm:"primaryKey"`
-	Part        InventoryPart
-	QuantityUsed int       `gorm:"not null"`
-}
-
-type DailyReport struct {
-	ReportDate            time.Time `gorm:"primaryKey"`
-	TicketsCreated       int       `gorm:"not null;default:0"`
-	TicketsResolved      int       `gorm:"not null;default:0"`
-	TicketsClosed        int       `gorm:"not null;default:0"`
-	ActiveCriticalTickets int       `gorm:"not null;default:0"`
-	AvgResolutionTime    int       // in minutes
-	SummaryData          JSONB
-	CreatedAt            time.Time `gorm:"not null;default:now()"`
-}
-
-type JSONB map[string]interface{} 
+type MaintenanceScheduleFilter struct {
+	AssetID      *uuid.UUID
+	AssignedToID *uuid.UUID
+	Status       *MaintenanceStatus
+} 

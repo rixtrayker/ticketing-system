@@ -1,109 +1,218 @@
+scalar Time
+scalar JSON
+
 type Query {
-    tickets: [Ticket!]!
+    tickets(filter: TicketFilter): [Ticket!]!
     ticket(id: ID!): Ticket
-    users: [User!]!
-    user(id: ID!): User
-    assets: [Asset!]!
+    assets(filter: AssetFilter): [Asset!]!
     asset(id: ID!): Asset
-    branches: [Branch!]!
-    branch(id: ID!): Branch
+    users(filter: UserFilter): [User!]!
+    user(id: ID!): User
+    maintenanceSchedules(filter: MaintenanceScheduleFilter): [MaintenanceSchedule!]!
+    maintenanceSchedule(id: ID!): MaintenanceSchedule
 }
 
 type Mutation {
     createTicket(input: CreateTicketInput!): Ticket!
     updateTicket(id: ID!, input: UpdateTicketInput!): Ticket!
-    createUser(input: CreateUserInput!): User!
-    updateUser(id: ID!, input: UpdateUserInput!): User!
+    deleteTicket(id: ID!): Boolean!
+    
     createAsset(input: CreateAssetInput!): Asset!
     updateAsset(id: ID!, input: UpdateAssetInput!): Asset!
+    deleteAsset(id: ID!): Boolean!
+    
+    createUser(input: CreateUserInput!): User!
+    updateUser(id: ID!, input: UpdateUserInput!): User!
+    deleteUser(id: ID!): Boolean!
+    
+    createMaintenanceSchedule(input: CreateMaintenanceScheduleInput!): MaintenanceSchedule!
+    updateMaintenanceSchedule(id: ID!, input: UpdateMaintenanceScheduleInput!): MaintenanceSchedule!
+    deleteMaintenanceSchedule(id: ID!): Boolean!
 }
 
 type Ticket {
     id: ID!
     title: String!
-    description: String
+    description: String!
     status: TicketStatus!
     priority: TicketPriority!
-    asset: Asset!
-    createdBy: User!
     assignedTo: User
+    createdBy: User!
+    asset: Asset
     createdAt: Time!
+    updatedAt: Time!
     resolvedAt: Time
-    closedAt: Time
-    updates: [TicketUpdate!]!
-}
-
-type TicketUpdate {
-    id: ID!
-    ticket: Ticket!
-    user: User!
-    comment: String
-    oldStatus: TicketStatus
-    newStatus: TicketStatus
-    photoUrl: String
-    createdAt: Time!
-}
-
-type User {
-    id: ID!
-    fullName: String!
-    email: String!
-    role: UserRole!
-    branch: Branch
-    isActive: Boolean!
-    createdAt: Time!
+    comments: [Comment!]!
 }
 
 type Asset {
     id: ID!
     name: String!
-    qrCodeId: String!
-    branch: Branch!
-    category: AssetCategory
-    modelNumber: String
-    purchaseDate: Time
-    warrantyUntil: Time
+    type: AssetType!
+    status: AssetStatus!
+    location: String!
+    qrCode: String!
+    purchaseDate: Time!
+    lastMaintenanceDate: Time
+    nextMaintenanceDate: Time
+    maintenanceHistory: [MaintenanceRecord!]!
+    tickets: [Ticket!]!
     metadata: JSON
-    createdAt: Time!
 }
 
-type Branch {
+type User {
     id: ID!
+    email: String!
     name: String!
-    address: String
+    role: UserRole!
+    assignedTickets: [Ticket!]!
+    createdTickets: [Ticket!]!
     createdAt: Time!
+    updatedAt: Time!
 }
 
-type AssetCategory {
+type MaintenanceSchedule {
+    id: ID!
+    asset: Asset!
+    frequency: MaintenanceFrequency!
+    lastPerformed: Time
+    nextDue: Time!
+    assignedTo: User!
+    status: MaintenanceStatus!
+    notes: String
+    createdAt: Time!
+    updatedAt: Time!
+}
+
+type MaintenanceRecord {
+    id: ID!
+    asset: Asset!
+    performedBy: User!
+    performedAt: Time!
+    type: MaintenanceType!
+    notes: String
+    partsUsed: [PartUsage!]!
+}
+
+type PartUsage {
+    id: ID!
+    part: Part!
+    quantity: Int!
+    maintenanceRecord: MaintenanceRecord!
+}
+
+type Part {
     id: ID!
     name: String!
+    description: String!
+    quantity: Int!
+    minimumQuantity: Int!
+    location: String!
+    lastRestocked: Time!
+}
+
+type Comment {
+    id: ID!
+    ticket: Ticket!
+    user: User!
+    content: String!
+    createdAt: Time!
+    updatedAt: Time!
 }
 
 enum TicketStatus {
-    NEW
+    OPEN
     IN_PROGRESS
     RESOLVED
     CLOSED
+    CANCELLED
 }
 
 enum TicketPriority {
     LOW
     MEDIUM
     HIGH
+    CRITICAL
+}
+
+enum AssetType {
+    EQUIPMENT
+    FURNITURE
+    ELECTRONICS
+    PLUMBING
+    HVAC
+    OTHER
+}
+
+enum AssetStatus {
+    OPERATIONAL
+    MAINTENANCE_NEEDED
+    OUT_OF_SERVICE
+    DECOMMISSIONED
 }
 
 enum UserRole {
     ADMIN
     MANAGER
     TECHNICIAN
-    USER
+    STAFF
+}
+
+enum MaintenanceFrequency {
+    DAILY
+    WEEKLY
+    MONTHLY
+    QUARTERLY
+    BIANNUAL
+    ANNUAL
+}
+
+enum MaintenanceStatus {
+    SCHEDULED
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+    OVERDUE
+}
+
+enum MaintenanceType {
+    PREVENTIVE
+    CORRECTIVE
+    PREDICTIVE
+    CONDITION_BASED
+}
+
+input TicketFilter {
+    status: TicketStatus
+    priority: TicketPriority
+    assignedTo: ID
+    createdBy: ID
+    asset: ID
+}
+
+input AssetFilter {
+    type: AssetType
+    status: AssetStatus
+    location: String
+}
+
+input UserFilter {
+    role: UserRole
+    email: String
+}
+
+input MaintenanceScheduleFilter {
+    status: MaintenanceStatus
+    assignedTo: ID
+    asset: ID
 }
 
 input CreateTicketInput {
     title: String!
-    description: String
+    description: String!
     priority: TicketPriority!
-    assetId: ID!
+    assignedTo: ID
+    asset: ID
 }
 
 input UpdateTicketInput {
@@ -111,46 +220,48 @@ input UpdateTicketInput {
     description: String
     status: TicketStatus
     priority: TicketPriority
-    assignedToId: ID
-}
-
-input CreateUserInput {
-    fullName: String!
-    email: String!
-    password: String!
-    role: UserRole!
-    branchId: ID
-}
-
-input UpdateUserInput {
-    fullName: String
-    email: String
-    role: UserRole
-    branchId: ID
-    isActive: Boolean
+    assignedTo: ID
+    asset: ID
 }
 
 input CreateAssetInput {
     name: String!
-    qrCodeId: String!
-    branchId: ID!
-    categoryId: ID
-    modelNumber: String
-    purchaseDate: Time
-    warrantyUntil: Time
+    type: AssetType!
+    location: String!
+    purchaseDate: Time!
     metadata: JSON
 }
 
 input UpdateAssetInput {
     name: String
-    qrCodeId: String
-    branchId: ID
-    categoryId: ID
-    modelNumber: String
-    purchaseDate: Time
-    warrantyUntil: Time
+    type: AssetType
+    status: AssetStatus
+    location: String
     metadata: JSON
 }
 
-scalar Time
-scalar JSON 
+input CreateUserInput {
+    email: String!
+    name: String!
+    role: UserRole!
+}
+
+input UpdateUserInput {
+    email: String
+    name: String
+    role: UserRole
+}
+
+input CreateMaintenanceScheduleInput {
+    asset: ID!
+    frequency: MaintenanceFrequency!
+    assignedTo: ID!
+    notes: String
+}
+
+input UpdateMaintenanceScheduleInput {
+    frequency: MaintenanceFrequency
+    assignedTo: ID
+    status: MaintenanceStatus
+    notes: String
+} 

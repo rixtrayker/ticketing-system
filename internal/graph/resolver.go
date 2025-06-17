@@ -1,7 +1,7 @@
 package graph
 
 import (
-	"github.com/rixtrayker/ticketing-system/internal/models"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -14,11 +14,11 @@ type Resolver struct {
 }
 
 // Helper function to convert string ID to UUID
-func stringToUUID(id string) (models.UUID, error) {
-	return models.ParseUUID(id)
+func stringToUUID(id string) (uuid.UUID, error) {
+	return uuid.Parse(id)
 }
 
 // Helper function to convert UUID to string
-func uuidToString(id models.UUID) string {
+func uuidToString(id uuid.UUID) string {
 	return id.String()
 } 

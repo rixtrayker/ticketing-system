@@ -1,80 +1,66 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
-	"github.com/99designs/gqlgen/codegen/testserver/nullabledirectives/generated"
-	"github.com/99designs/gqlgen/graphql"
-	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/rixtrayker/ticketing-system/internal/config"
+	"github.com/rixtrayker/ticketing-system/internal/db"
 	"github.com/rixtrayker/ticketing-system/internal/graph"
-	"github.com/rixtrayker/ticketing-system/pkg/database"
 )
 
-func main() {
-	// Load configuration
-	cfg := config.NewConfig()
+const defaultPort = "8080"
 
-	// Initialize database
-	db, err := database.NewDatabase(cfg)
-	if err != nil {
+func main() {
+	// Initialize database connection
+	dbConfig := db.NewConfig()
+	if err := db.Connect(dbConfig); err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Create GraphQL resolver
+	// Run migrations
+	if err := db.AutoMigrate(); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	// Create GraphQL resolver with database connection
 	resolver := &graph.Resolver{
-		DB: db,
+		DB: db.DB,
 	}
 
-	// Create GraphQL server
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
-		Resolvers: resolver,
-		Directives: generated.DirectiveRoot{
-			IsAuthenticated: func(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
-				// TODO: Implement authentication directive
-				return next(ctx)
-			},
-		},
-	}))
+	// We'll uncomment this after generating the GraphQL files
+	// srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
+	// 	Resolvers: resolver,
+	// }))
 
-	// Create HTTP server
+	// Add middleware for CORS and other headers
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	// http.Handle("/query", corsMiddleware(srv))
 
-	// Create server
-	server := &http.Server{
-		Addr:    ":" + cfg.Port,
-		Handler: nil,
+	// Start server
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
 	}
 
-	// Start server in a goroutine
-	go func() {
-		log.Printf("Server starting on port %s", cfg.Port)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Failed to start server: %v", err)
+	log.Printf("Server is running on http://localhost:%s", port)
+	log.Printf("GraphQL Playground available at http://localhost:%s/", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+// corsMiddleware adds CORS headers to the response
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
 		}
-	}()
 
-	// Wait for interrupt signal
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	// Graceful shutdown
-	log.Println("Shutting down server...")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
-	}
-
-	log.Println("Server exiting")
+		next.ServeHTTP(w, r)
+	})
 } 
