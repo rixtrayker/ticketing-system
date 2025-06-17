@@ -1,0 +1,156 @@
+type Query {
+    tickets: [Ticket!]!
+    ticket(id: ID!): Ticket
+    users: [User!]!
+    user(id: ID!): User
+    assets: [Asset!]!
+    asset(id: ID!): Asset
+    branches: [Branch!]!
+    branch(id: ID!): Branch
+}
+
+type Mutation {
+    createTicket(input: CreateTicketInput!): Ticket!
+    updateTicket(id: ID!, input: UpdateTicketInput!): Ticket!
+    createUser(input: CreateUserInput!): User!
+    updateUser(id: ID!, input: UpdateUserInput!): User!
+    createAsset(input: CreateAssetInput!): Asset!
+    updateAsset(id: ID!, input: UpdateAssetInput!): Asset!
+}
+
+type Ticket {
+    id: ID!
+    title: String!
+    description: String
+    status: TicketStatus!
+    priority: TicketPriority!
+    asset: Asset!
+    createdBy: User!
+    assignedTo: User
+    createdAt: Time!
+    resolvedAt: Time
+    closedAt: Time
+    updates: [TicketUpdate!]!
+}
+
+type TicketUpdate {
+    id: ID!
+    ticket: Ticket!
+    user: User!
+    comment: String
+    oldStatus: TicketStatus
+    newStatus: TicketStatus
+    photoUrl: String
+    createdAt: Time!
+}
+
+type User {
+    id: ID!
+    fullName: String!
+    email: String!
+    role: UserRole!
+    branch: Branch
+    isActive: Boolean!
+    createdAt: Time!
+}
+
+type Asset {
+    id: ID!
+    name: String!
+    qrCodeId: String!
+    branch: Branch!
+    category: AssetCategory
+    modelNumber: String
+    purchaseDate: Time
+    warrantyUntil: Time
+    metadata: JSON
+    createdAt: Time!
+}
+
+type Branch {
+    id: ID!
+    name: String!
+    address: String
+    createdAt: Time!
+}
+
+type AssetCategory {
+    id: ID!
+    name: String!
+}
+
+enum TicketStatus {
+    NEW
+    IN_PROGRESS
+    RESOLVED
+    CLOSED
+}
+
+enum TicketPriority {
+    LOW
+    MEDIUM
+    HIGH
+}
+
+enum UserRole {
+    ADMIN
+    MANAGER
+    TECHNICIAN
+    USER
+}
+
+input CreateTicketInput {
+    title: String!
+    description: String
+    priority: TicketPriority!
+    assetId: ID!
+}
+
+input UpdateTicketInput {
+    title: String
+    description: String
+    status: TicketStatus
+    priority: TicketPriority
+    assignedToId: ID
+}
+
+input CreateUserInput {
+    fullName: String!
+    email: String!
+    password: String!
+    role: UserRole!
+    branchId: ID
+}
+
+input UpdateUserInput {
+    fullName: String
+    email: String
+    role: UserRole
+    branchId: ID
+    isActive: Boolean
+}
+
+input CreateAssetInput {
+    name: String!
+    qrCodeId: String!
+    branchId: ID!
+    categoryId: ID
+    modelNumber: String
+    purchaseDate: Time
+    warrantyUntil: Time
+    metadata: JSON
+}
+
+input UpdateAssetInput {
+    name: String
+    qrCodeId: String
+    branchId: ID
+    categoryId: ID
+    modelNumber: String
+    purchaseDate: Time
+    warrantyUntil: Time
+    metadata: JSON
+}
+
+scalar Time
+scalar JSON 
