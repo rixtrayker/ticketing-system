@@ -1,0 +1,537 @@
+{
+    "info": {
+        "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "name": "Ticketing System API",
+        "description": "GraphQL API for the Ticketing System",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Tickets",
+            "item": [
+                {
+                    "name": "Get All Tickets",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"query GetTickets($filter: TicketFilter) {\\n    tickets(filter: $filter) {\\n      id\\n      title\\n      description\\n      status\\n      priority\\n      assignedTo {\\n        id\\n        name\\n      }\\n      createdBy {\\n        id\\n        name\\n      }\\n      asset {\\n        id\\n        name\\n      }\\n      createdAt\\n      updatedAt\\n      resolvedAt\\n    }\\n  }\",\n  \"variables\": {\n    \"filter\": {\n      \"status\": \"OPEN\",\n      \"priority\": \"HIGH\"\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Ticket by ID",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"query GetTicket($id: ID!) {\\n    ticket(id: $id) {\\n      id\\n      title\\n      description\\n      status\\n      priority\\n      assignedTo {\\n        id\\n        name\\n      }\\n      createdBy {\\n        id\\n        name\\n      }\\n      asset {\\n        id\\n        name\\n      }\\n      createdAt\\n      updatedAt\\n      resolvedAt\\n      comments {\\n        id\\n        content\\n        user {\\n          id\\n          name\\n        }\\n        createdAt\\n      }\\n    }\\n  }\",\n  \"variables\": {\n    \"id\": \"ticket-id-here\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Ticket",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"mutation CreateTicket($input: CreateTicketInput!) {\\n    createTicket(input: $input) {\\n      id\\n      title\\n      description\\n      status\\n      priority\\n      assignedTo {\\n        id\\n        name\\n      }\\n      asset {\\n        id\\n        name\\n      }\\n      createdAt\\n    }\\n  }\",\n  \"variables\": {\n    \"input\": {\n      \"title\": \"New Maintenance Request\",\n      \"description\": \"The air conditioning unit needs repair\",\n      \"priority\": \"HIGH\",\n      \"assignedTo\": \"user-id-here\",\n      \"asset\": \"asset-id-here\"\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Ticket",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"mutation UpdateTicket($id: ID!, $input: UpdateTicketInput!) {\\n    updateTicket(id: $id, input: $input) {\\n      id\\n      title\\n      description\\n      status\\n      priority\\n      assignedTo {\\n        id\\n        name\\n      }\\n      asset {\\n        id\\n        name\\n      }\\n      updatedAt\\n    }\\n  }\",\n  \"variables\": {\n    \"id\": \"ticket-id-here\",\n    \"input\": {\n      \"title\": \"Updated Maintenance Request\",\n      \"description\": \"Updated description\",\n      \"status\": \"IN_PROGRESS\",\n      \"priority\": \"MEDIUM\",\n      \"assignedTo\": \"user-id-here\"\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Ticket",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"mutation DeleteTicket($id: ID!) {\\n    deleteTicket(id: $id)\\n  }\",\n  \"variables\": {\n    \"id\": \"ticket-id-here\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Users",
+            "item": [
+                {
+                    "name": "Get All Users",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"query GetUsers($filter: UserFilter) {\\n    users(filter: $filter) {\\n      id\\n      email\\n      name\\n      role\\n      assignedTickets {\\n        id\\n        title\\n      }\\n      createdTickets {\\n        id\\n        title\\n      }\\n      createdAt\\n      updatedAt\\n    }\\n  }\",\n  \"variables\": {\n    \"filter\": {\n      \"role\": \"TECHNICIAN\"\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get User by ID",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"query GetUser($id: ID!) {\\n    user(id: $id) {\\n      id\\n      email\\n      name\\n      role\\n      assignedTickets {\\n        id\\n        title\\n        status\\n      }\\n      createdTickets {\\n        id\\n        title\\n        status\\n      }\\n      createdAt\\n      updatedAt\\n    }\\n  }\",\n  \"variables\": {\n    \"id\": \"user-id-here\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"mutation CreateUser($input: CreateUserInput!) {\\n    createUser(input: $input) {\\n      id\\n      email\\n      name\\n      role\\n      createdAt\\n    }\\n  }\",\n  \"variables\": {\n    \"input\": {\n      \"email\": \"newuser@example.com\",\n      \"name\": \"New User\",\n      \"role\": \"TECHNICIAN\"\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {\\n    updateUser(id: $id, input: $input) {\\n      id\\n      email\\n      name\\n      role\\n      updatedAt\\n    }\\n  }\",\n  \"variables\": {\n    \"id\": \"user-id-here\",\n    \"input\": {\n      \"name\": \"Updated Name\",\n      \"role\": \"MANAGER\"\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"mutation DeleteUser($id: ID!) {\\n    deleteUser(id: $id)\\n  }\",\n  \"variables\": {\n    \"id\": \"user-id-here\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Assets",
+            "item": [
+                {
+                    "name": "Get All Assets",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"query GetAssets($filter: AssetFilter) {\\n    assets(filter: $filter) {\\n      id\\n      name\\n      type\\n      status\\n      location\\n      qrCode\\n      purchaseDate\\n      lastMaintenanceDate\\n      nextMaintenanceDate\\n      maintenanceHistory {\\n        id\\n        type\\n        performedAt\\n      }\\n      tickets {\\n        id\\n        title\\n        status\\n      }\\n    }\\n  }\",\n  \"variables\": {\n    \"filter\": {\n      \"type\": \"HVAC\",\n      \"status\": \"OPERATIONAL\"\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Asset by ID",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"query GetAsset($id: ID!) {\\n    asset(id: $id) {\\n      id\\n      name\\n      type\\n      status\\n      location\\n      qrCode\\n      purchaseDate\\n      lastMaintenanceDate\\n      nextMaintenanceDate\\n      maintenanceHistory {\\n        id\\n        type\\n        performedAt\\n        performedBy {\\n          id\\n          name\\n        }\\n      }\\n      tickets {\\n        id\\n        title\\n        status\\n        priority\\n      }\\n      metadata\\n    }\\n  }\",\n  \"variables\": {\n    \"id\": \"asset-id-here\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Asset",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"mutation CreateAsset($input: CreateAssetInput!) {\\n    createAsset(input: $input) {\\n      id\\n      name\\n      type\\n      status\\n      location\\n      qrCode\\n      purchaseDate\\n      metadata\\n    }\\n  }\",\n  \"variables\": {\n    \"input\": {\n      \"name\": \"New HVAC Unit\",\n      \"type\": \"HVAC\",\n      \"location\": \"Building A, Floor 2\",\n      \"purchaseDate\": \"2024-01-01T00:00:00Z\",\n      \"metadata\": {\n        \"manufacturer\": \"ACME Corp\",\n        \"model\": \"HVAC-2000\",\n        \"serialNumber\": \"SN123456\"\n      }\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Asset",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"mutation UpdateAsset($id: ID!, $input: UpdateAssetInput!) {\\n    updateAsset(id: $id, input: $input) {\\n      id\\n      name\\n      type\\n      status\\n      location\\n      updatedAt\\n      metadata\\n    }\\n  }\",\n  \"variables\": {\n    \"id\": \"asset-id-here\",\n    \"input\": {\n      \"name\": \"Updated HVAC Unit\",\n      \"status\": \"MAINTENANCE_NEEDED\",\n      \"location\": \"Building A, Floor 3\",\n      \"metadata\": {\n        \"lastService\": \"2024-03-01\"\n      }\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Asset",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"mutation DeleteAsset($id: ID!) {\\n    deleteAsset(id: $id)\\n  }\",\n  \"variables\": {\n    \"id\": \"asset-id-here\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Maintenance Schedules",
+            "item": [
+                {
+                    "name": "Get All Maintenance Schedules",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"query GetMaintenanceSchedules($filter: MaintenanceScheduleFilter) {\\n    maintenanceSchedules(filter: $filter) {\\n      id\\n      asset {\\n        id\\n        name\\n      }\\n      frequency\\n      lastPerformed\\n      nextDue\\n      assignedTo {\\n        id\\n        name\\n      }\\n      status\\n      notes\\n      createdAt\\n      updatedAt\\n    }\\n  }\",\n  \"variables\": {\n    \"filter\": {\n      \"status\": \"SCHEDULED\"\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Maintenance Schedule by ID",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"query GetMaintenanceSchedule($id: ID!) {\\n    maintenanceSchedule(id: $id) {\\n      id\\n      asset {\\n        id\\n        name\\n        type\\n        location\\n      }\\n      frequency\\n      lastPerformed\\n      nextDue\\n      assignedTo {\\n        id\\n        name\\n        role\\n      }\\n      status\\n      notes\\n      createdAt\\n      updatedAt\\n    }\\n  }\",\n  \"variables\": {\n    \"id\": \"schedule-id-here\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Maintenance Schedule",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"mutation CreateMaintenanceSchedule($input: CreateMaintenanceScheduleInput!) {\\n    createMaintenanceSchedule(input: $input) {\\n      id\\n      asset {\\n        id\\n        name\\n      }\\n      frequency\\n      nextDue\\n      assignedTo {\\n        id\\n        name\\n      }\\n      status\\n      notes\\n      createdAt\\n    }\\n  }\",\n  \"variables\": {\n    \"input\": {\n      \"asset\": \"asset-id-here\",\n      \"frequency\": \"MONTHLY\",\n      \"assignedTo\": \"user-id-here\",\n      \"notes\": \"Regular maintenance check\"\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Maintenance Schedule",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"mutation UpdateMaintenanceSchedule($id: ID!, $input: UpdateMaintenanceScheduleInput!) {\\n    updateMaintenanceSchedule(id: $id, input: $input) {\\n      id\\n      frequency\\n      lastPerformed\\n      nextDue\\n      assignedTo {\\n        id\\n        name\\n      }\\n      status\\n      notes\\n      updatedAt\\n    }\\n  }\",\n  \"variables\": {\n    \"id\": \"schedule-id-here\",\n    \"input\": {\n      \"frequency\": \"QUARTERLY\",\n      \"assignedTo\": \"user-id-here\",\n      \"status\": \"IN_PROGRESS\",\n      \"notes\": \"Updated maintenance schedule\"\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Maintenance Schedule",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"mutation DeleteMaintenanceSchedule($id: ID!) {\\n    deleteMaintenanceSchedule(id: $id)\\n  }\",\n  \"variables\": {\n    \"id\": \"schedule-id-here\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/query",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "query"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080",
+            "type": "string"
+        }
+    ]
+}
